@@ -1,0 +1,177 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions, 
+    TextField, FormControlLabel, Switch,Grid, 
+    Typography, Chip, Input, IconButton
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import CustomCheckbox from '../Button/CustomCheckbox';
+import ConfirmPopup from '../Popup/ConfirmPopup';
+import OptionPopup from '../Popup/OptionPopup';
+
+
+export default function EditParticipant({participant, onSave }) {
+    const [localParticipant, setLocalParticipant] = useState(participant);
+    const [editOpen, setEditOpen] = useState(false); 
+    const [popUpOpen, setPopUpOpen] = useState(false);
+
+    useEffect(() => {
+        if (editOpen) {
+            setLocalParticipant(participant);  // Reset localParticipant when the dialog opens
+        }
+    }, [editOpen, participant]);
+
+    const handleAddTag = (tag) => {
+        if (!localParticipant.participantInfo.tagsInfo.includes(tag)) {
+            setLocalParticipant(prev => ({ 
+                ...prev, 
+                participantInfo: {
+                    ...prev.participantInfo,
+                    tagsInfo: [...prev.participantInfo.tagsInfo, tag]
+                }
+            }));
+        }
+    };
+
+    const handleDeleteTag = (tagToDelete) => {
+        setLocalParticipant(prev => ({
+            ...prev,
+            participantInfo: {
+                ...prev.participantInfo,
+                tagsInfo: prev.participantInfo.tagsInfo.filter(tag => tag !== tagToDelete)
+            }
+        }));
+    };
+
+    const handleSave = () => {
+        onSave(localParticipant);
+        console.log('Saved!')
+    };
+
+    const handleClose = () => {
+        setEditOpen(false);
+    };
+
+    return (
+        <div>
+            {/* This button will trigger the edit dialog */}
+            <IconButton onClick={() => setEditOpen(true)}>
+                <EditIcon color="primary"/>
+            </IconButton>
+
+            <Dialog open={editOpen} onClose={handleClose} fullWidth maxWidth="md">
+                <DialogTitle align="center">
+                    <Typography variant="h5" color="primary" style={{ marginBottom: '20px' }}><strong>Edit Participant</strong></Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField 
+                        fullWidth 
+                        label="Email" 
+                        variant="outlined" 
+                        value={localParticipant.participantInfo.email}
+                        onChange={(e) => setLocalParticipant(prev => ({
+                            ...prev,
+                            participantInfo: {
+                                ...prev.participantInfo,
+                                email: e.target.value
+                            }
+                        }))}
+                        style={{ marginBottom: '20px', marginTop: '20px'}}
+                    />
+                    <FormControlLabel
+                        control={
+                            <CustomCheckbox 
+                                checked={localParticipant.participantInfo.isWillContact}
+                                onChange={() => setLocalParticipant(prev => ({
+                                    ...prev,
+                                    participantInfo: {
+                                        ...prev.participantInfo,
+                                        isWillContact: !prev.participantInfo.isWillContact
+                                    }
+                                }))}
+                            />
+                        }
+                        label="This participant is willing to join in the future studies."
+                    />
+                    <FormControlLabel
+                        control={
+                            <CustomCheckbox 
+                                checked={localParticipant.isGift}
+                                onChange={() => setLocalParticipant(prev => ({
+                                    ...prev,
+                                    isGift: !prev.isGift
+                                }))}
+                            />
+                        }
+                        label="This participant wins a gift."
+                    />
+                    <FormControlLabel
+                        control={
+                            <CustomCheckbox 
+                                checked={localParticipant.isWIllReceiveReport}
+                                onChange={() => setLocalParticipant(prev => ({
+                                    ...prev,
+                                    isWIllReceiveReport: !prev.isWIllReceiveReport
+                                }))}
+                            />
+                        }
+                        label="This participant is willing to receive the report."
+                    />
+                    <Typography variant="h6" style={{ marginTop: '20px' }}>
+                        Tags:
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {localParticipant.participantInfo.tagsInfo.map((tag, index) => (
+                            <Grid item key={index}>
+                                <Chip 
+                                    label={tag}
+                                    onDelete={() => handleDeleteTag(tag)}
+                                />
+                            </Grid>
+                        ))}
+                        <Grid item>
+                            <Input 
+                                placeholder="Add Tag"
+                                onKeyPress={(event) => {
+                                    if (event.key === 'Enter') {
+                                        handleAddTag(event.target.value);
+                                        event.target.value = '';  // Clear the input after adding the tag
+                                    }
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <FormControlLabel
+                        control={<Switch 
+                            checked={localParticipant.isComplete} 
+                            onChange={() => setLocalParticipant(prev => ({
+                                ...prev,
+                                isComplete: !prev.isComplete
+                            }))} 
+                            />
+                        }
+                        label="Is Completed"
+                        style={{ marginTop: '20px' }}
+                    />
+                    <TextField 
+                        fullWidth 
+                        label="Note" 
+                        variant="outlined" 
+                        value={localParticipant.note}
+                        onChange={(e) => setLocalParticipant(prev => ({
+                            ...prev,
+                            note: e.target.value
+                        }))}
+                        multiline
+                        rows={4}
+                        style={{ marginBottom: '20px', marginTop: '20px'}}
+                    />
+                </DialogContent>
+                <DialogActions style={{ padding: '20px'}}>
+                    <ConfirmPopup buttonText={'Save'} popupText={'Your edit has been saved!'} open={popUpOpen} onClick={handleSave} onConfirm={handleClose}/>
+                    <OptionPopup buttonText={'Cancel'} popupText={'Do you want to cancel?'} onClick={handleClose}/>
+                </DialogActions>
+            </Dialog>
+        </div>
+    );
+}
