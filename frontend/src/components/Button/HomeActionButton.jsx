@@ -13,43 +13,29 @@ import PeopleIcon from '@mui/icons-material/People';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DescriptionIcon from '@mui/icons-material/Description';
-import Typography from '@mui/material/Typography';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Box from '@mui/material/Box';
+import { Typography } from '@mui/material';
 
-export default function ActionButton({pageCondition}) {
+export default function HomeActionButton({pageItemId}) {
   
     const [open, setOpen] = React.useState(false);
     const placement ='bottom-start';
     const anchorRef = React.useRef(null);
 
-    let actionList = [];
-
-    function createData(icon, name) {
-        return { icon, name };
+    function createData(icon, title) {
+        return { icon, title };
     }
 
-    if(pageCondition === 'sessionBoard') {
-        
-        actionList = [
-            createData(<EditIcon/>, 'Edit Session'), 
-            createData(<HighlightOffIcon/>, 'Delete Session'), 
-            createData(<ListAltIcon/>, 'View Participants')
-        ];
+    const  actionList = [
+        createData(<EditIcon/>, 'Edit Detail'),
+        createData(<PeopleIcon/>, 'Manage Participant'),
+        createData(<PeopleOutlineIcon/>, 'Manage Researcher'),
+        createData(<CalendarMonthIcon/>, 'Manage Session'),
+        createData(<DescriptionIcon/>, 'Generate Report'),
+        createData(<HighlightOffIcon/>, 'Close Study')
+      ];
 
-    } 
-    if (pageCondition === "dashBoard") {
-
-        actionList = [
-            createData(<EditIcon/>, 'Edit Detail'),
-            createData(<PeopleIcon/>, 'Manage Participant'),
-            createData(<PeopleOutlineIcon/>, 'Manage Researcher'),
-            createData(<CalendarMonthIcon/>, 'Manage Session'),
-            createData(<DescriptionIcon/>, 'Generate Report'),
-            createData(<HighlightOffIcon/>, 'Close Study')
-        ];
-    }
-  
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -81,7 +67,7 @@ export default function ActionButton({pageCondition}) {
 
   return (
     <div>
-        <Box sx={{ display: 'flex', marginBottom: 5, marginLeft: 5}}>
+        <Box sx={{ display: 'flex', marginBottom: 5, marginRight: 10}}>
             <Button
             variant="contained"
             ref={anchorRef}
@@ -115,12 +101,12 @@ export default function ActionButton({pageCondition}) {
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={handleListKeyDown}
-                  >
-                    {actionList.map((actionList) => (
-                        <MenuItem key={actionList}>
-                            <ListItemIcon>{actionList.icon}</ListItemIcon>
-                            <Typography textAlign="center">{actionList.name}</Typography>
-                        </MenuItem>
+                  >                    
+                    {actionList.map((actionList, index) => (
+                      <MenuItem key={index}> 
+                          <ListItemIcon>{actionList.icon}</ListItemIcon>                        
+                          <Typography textAlign="center">{actionList.title}</Typography>
+                      </MenuItem>
                     ))}
                   </MenuList>
                 </ClickAwayListener>

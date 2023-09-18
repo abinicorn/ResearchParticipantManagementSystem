@@ -60,6 +60,30 @@ router.post('/add', async (req, res) => {
     }
 });
 
+// get all participants id
+router.get('/all', async (req, res) => {
+
+    try {
+        const participants = await ParticipantDao.getAllParticipants();
+
+        if (participants) {
+            res.status(HTTP_SUCCESS).json(participants);
+        } else {
+            res.status(HTTP_NOT_FOUND).json({ error: "Participant not found" });
+        }
+    } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+        } else {
+            res.status(HTTP_SERVER_ERROR).json({
+                error: "Failed to get participant.",
+                details: error.message
+            });
+        }
+    }
+    
+});
+
 // Retrieve specific participant details
 router.get('/:participantId', async (req, res) => {
 

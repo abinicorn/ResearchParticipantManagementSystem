@@ -44,13 +44,7 @@ const studyParticipantSchema = new mongoose.Schema({
     timestamps: {}
 });
 
-// studyParticipantSchema.pre('save', async function(next) {
-//     if (this.isNew) {  
-//         const count = await mongoose.model('StudyParticipant').countDocuments({ studyId: this.studyId });
-//         this.serialNum = count + 1;  
-//     }
-//     next();
-// });
+studyParticipantSchema.index({ studyId: 1 });
 
 const StudyParticipant = mongoose.model('StudyParticipant', studyParticipantSchema,'StudyParticipant');
 

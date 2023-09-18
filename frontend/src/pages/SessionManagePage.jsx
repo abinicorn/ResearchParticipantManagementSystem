@@ -1,98 +1,129 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import CreateSession from '../components/Session/CreateSession';
-import ActionButton from '../components/Button/ActionButton';
+import SessionActionButton from '../components/Button/SessionActionButton';
+import { SessionContext } from './SessionContextProvider';
+import { DataGrid, GridToolbar  } from '@mui/x-data-grid';
+import {styled} from '@mui/material/styles'
+/*
+import useScrollTrigger from '@mui/material/useScrollTrigger';
+import Fab from '@mui/material/Fab';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Fade from '@mui/material/Fade';
+import PropTypes from 'prop-types';
+*/
 
-export const CreateSessionContext = React.createContext(undefined);
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+  '& .MuiDataGrid-columnHeader': {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  '& .MuiDataGrid-columnHeaderTitle': {
+      whiteSpace: 'pre-line',
+      lineHeight: '1.4',
+      textAlign: 'center'
+  },
+  '& .MuiDataGrid-cell:focus': {
+      outline: 'none'
+  }
+}));
+
+/*
+function ScrollTop(props) {
+  const { children, window } = props;
+  // Note that you normally won't need to set the window ref as useScrollTrigger
+  // will default to window.
+  // This is only being set here because the demo is in an iframe.
+  const trigger = useScrollTrigger({
+    target: window ? window() : undefined,
+    disableHysteresis: true,
+    threshold: 100,
+  });
+  const handleClick = (event) => {
+    const anchor = (event.target.ownerDocument || document).querySelector(
+      '#back-to-top-anchor',
+    );
+
+    if (anchor) {
+      anchor.scrollIntoView({
+        block: 'center',
+      });
+    }
+  }
+  return (
+    <Fade in={trigger}>
+      <Box
+        onClick={handleClick}
+        role="presentation"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+      >
+        {children}
+      </Box>
+    </Fade>
+  );
+};
+*/
+/*
+ScrollTop.propTypes = {
+  children: PropTypes.element.isRequired,
+  /**
+   * Injected by the documentation to work in an iframe.
+   * You won't need it on your project.
+   */
+  //window: PropTypes.func,
+//}
+
 
 export default function SessionManagePage() {
+  
+  const {sessions, studyInfo} = React.useContext(SessionContext);
 
-  // New Session open set up
-  const [open, setOpen] = React.useState(undefined);
-  
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    [`&.${tableCellClasses.head}`]: {
-      backgroundColor: theme.palette.common.black,
-      color: theme.palette.common.white,
-    },
-    [`&.${tableCellClasses.body}`]: {
-      fontSize: 14,
-    },
-  }));
-      
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
-    },
-    // hide last border
-    '&:last-child td, &:last-child th': {
-      border: 0,
-    },
-  }));
-      
-  function createData(sessionCode, date, time, location, participantNum) {
-    return { sessionCode, date, time, location, participantNum };
-  }
-  
-  const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Eclair', 262, 16.0, 24, 6.0),
-  ];
+  const columns = [
+    { field: 'sessionCode', headerName: 'Session Code', width: 250, headerAlign: 'center', align:'center'},
+    { field: 'date', headerName: 'Date', width: 250, headerAlign: 'center', align:'center', valueGetter: (params) => (params.value.slice(0,10)) },
+    { field: 'time', headerName: 'Time', width: 250, headerAlign: 'center', align:'center'},
+    { field: 'location', headerName: 'Location', width: 250, headerAlign: 'center', align:'center'},
+    { field: 'participantNum', headerName: 'Participant Number', width: 250, headerAlign: 'center', align:'center' },
+    { field: '_id', headerName: 'Action', width: 200, headerAlign: 'center', align:'center', renderCell: (params) => (<SessionActionButton pageItemId = {params.value}/>)},
+  ]
 
     return (
         <div>
-          <Box sx={{ display: 'flex' }}>
+          <Box sx={{ display: 'flex'}}>
             <Navbar/>
-            <Sidebar/>
+            <Sidebar isSession={true}/>
           </Box>
-          <Box component="main" marginLeft={35} marginRight={20}>
+          <Box marginLeft={35} marginRight={23}>
             <h1>Session Management</h1>
-            <h1>Study Name</h1>
-            <CreateSessionContext.Provider value={[open, setOpen]}>
-              <CreateSession/>
-            </CreateSessionContext.Provider>
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 700 }} aria-label="customized table">
-                    <TableHead>
-                    <TableRow>
-                        <StyledTableCell>Session Code</StyledTableCell>
-                        <StyledTableCell align="right">Date</StyledTableCell>
-                        <StyledTableCell align="right">Time</StyledTableCell>
-                        <StyledTableCell align="right">Location</StyledTableCell>
-                        <StyledTableCell align="right">Participant Number</StyledTableCell>
-                        <StyledTableCell align="right">Action</StyledTableCell>
-                    </TableRow>
-                    </TableHead>
-                    <TableBody>
-                    {rows.map((row) => (
-                        <StyledTableRow key={row.sessionCode}>
-                        <StyledTableCell component="th" scope="row">
-                            {row.sessionCode}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">{row.date}</StyledTableCell>
-                        <StyledTableCell align="right">{row.time}</StyledTableCell>
-                        <StyledTableCell align="right">{row.location}</StyledTableCell>
-                        <StyledTableCell align="right">{row.participantNum}</StyledTableCell>
-                        <StyledTableCell align="right">
-                          <ActionButton pageCondition = "sessionBoard"/>
-                        </StyledTableCell>
-                        </StyledTableRow>
-                    ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-          </Box>   
+            <h1>{studyInfo.studyName} (Study Code: {studyInfo.studyCode})</h1>
+            <CreateSession create={true}/>
+            <StyledDataGrid
+              sx={{
+                marginTop: 2,
+                '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': { py: '8px' },
+                    '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': { py: '15px' },
+                    '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': { py: '22px' }
+              }}
+              getRowId={(row) => row._id}
+              rows={sessions}
+              columns={columns}
+              initialState={{
+                pagination: {
+                  paginationModel: { page: 0, pageSize: 10 },
+                },
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              slots={{
+                toolbar: GridToolbar
+              }}
+              disableSelectionOnClick
+              hideFooterSelectedRowCount
+          />
+          </Box>
         </div>       
     );
 }

@@ -18,18 +18,23 @@ class SessionDao {
     }
 
     static async retrieveSessionByStudyId(id) {
-        return await Session.find({ studyId: id});
+        return await Session.find({ studyId: id})
+        .populate({
+            path: 'participantList',
+            populate: {path: '_id', select: 'firstName lastName email phoneNum'}
+        })
+        .lean();
     }
     
-    static async updateSession(session) {
+    static async updateSession(sessionId, updateData) {
     
-        const dbSession = await Session.findOneAndUpdate({ _id: session._id }, session, { new: true });
+        const dbSession = await Session.findByIdAndUpdate(sessionId, updateData, { new: true });
         return dbSession != null;
 
     }
     
     static async deleteSession(id) {
-        await Session.deleteOne({ _id: id });
+        return await Session.deleteOne({ _id: id });
     }
     
 }

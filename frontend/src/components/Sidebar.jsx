@@ -7,11 +7,16 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';;
+import ListItemText from '@mui/material/ListItemText';
+import { SessionContext } from '../pages/SessionContextProvider';
+import { Link } from 'react-router-dom';
 
 const drawerWidth = 240;
 
-export default function Sidebar() {
+export default function Sidebar({isSession}) {
+    
+    const { studyList } = React.useContext(SessionContext);
+    
     return (
         <Drawer
         variant="permanent"
@@ -24,13 +29,13 @@ export default function Sidebar() {
         <Toolbar />
             <Box sx={{ overflow: 'auto' }}>
                 <List>
-                    {['Study 1', 'Study 2', 'Study 3', 'Study 4'].map((text, index) => (
-                    <ListItem key={text} disablePadding>
+                    {studyList.map((text, index) => (
+                    <ListItem key={index} disablePadding component={Link} to={isSession ? `/session/${text._id}`: `/study-participants/${text._id}`}> 
                         <ListItemButton>
                         <ListItemIcon>
                             <AssignmentRoundedIcon/>
                         </ListItemIcon>
-                        <ListItemText primary={text} />
+                        <ListItemText primary={text.studyName} />
                         </ListItemButton>
                     </ListItem>
                     ))}

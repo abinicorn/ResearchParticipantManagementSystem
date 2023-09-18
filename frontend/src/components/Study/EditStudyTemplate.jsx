@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Container,
     Typography,
@@ -11,115 +11,49 @@ import {
     Chip,
     Stack,
 } from '@mui/material';
-import Navbar from '../components/Navbar';
-import { useParams } from 'react-router-dom';
+import Navbar from '../Navbar';
 import CreateIcon from '@mui/icons-material/Create';
 import GroupIcon from '@mui/icons-material/Group';
 import ScienceIcon from '@mui/icons-material/Science';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ContactPageIcon from '@mui/icons-material/ContactPage';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 const apiClient = axios.create();
 
-export default function CreateEditStudyPage({ isEditMode}) {
-    //TODO: EDITING STUDY: THE RETRIVING ARTICLE FUNCTION HAS NOT BEEN UPDATED
-    const navigate = useNavigate();
-    const { existingStudyId } = useParams();
-    const researcherId = '64fd22ea1364b8632a09b8d5';
-// const {existingStudyData};
-
-    console.log("userId", existingStudyId);
-    console.log("isEditMode", isEditMode);
-
-
-    //TO DO: EDITING STUDY: ADD THE EDIT MODE TO THE USESTATEFUNCTION
-    const [studyData, setStudyData] = useState({
-        // isEditMode ? existingStudyData : {
-        studyCode: '',
-        studyName: '',
-        description: '',
-        creator: '',
-        researcherList: [],
-        studyType: '',
-        participantNumber: '',
-        recruitmentStartDate: '',
-        recruitmentCloseDate: '',
-        location: [],
-        surveyLink: '',
-        driveLink: ''
-
-        // }
-    });
-
-    //TODO: CREATE & EDIT FUNCTION NOT UPDATED TO THE HANDLESUBMIT function
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Add logic to save study data
-        // if (isEditMode) {
-        // } else {
-        // }
-        setStudyData({
-            ...studyData,
-            creator: researcherId
-        });
-        createStudy(studyData)
-            .then((createdStudy) => {
-                console.log('Study Created:', createdStudy);
-            })
-            .catch((error) => {
-                console.log('Error creating study', error);
-            })
-
-        alert('Study saved successfully!');
-    };
-
-
-    const createStudy = async (studyData) => {
-
-        try {
-            const response = await axios.post(`/study/${researcherId}`, studyData);
-            return response.data;
-        } catch (error) {
-            console.error('Error creating study:', error);
-            throw error;
-        }
-        // navigate('/)
-    };
-
-    
+export default function EditStudyTemplate({ isEditMode, studyData, setStudyData, handleSubmit }) {
+    const researcherId = '64fe98fdae1ff28bdcd455a7';
     const [locationInput, setLocationInput] = useState('');
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         setStudyData({
             ...studyData,
-            [name]: value,
+            [name]: value
         });
     };
 
-const addLocation = () => {
-    if (locationInput.trim() !== '') {
-        setStudyData({
-            ...studyData,
-            location: [...studyData.location, locationInput],
-        });
-        setLocationInput(''); // Clear the input after adding
-    }
-};
+    const addLocation = () => {
+        if (locationInput.trim() !== '') {
+            setStudyData({
+                ...studyData,
+                location: [...studyData.location, locationInput],
+            });
+            setLocationInput(''); 
+        }
+    };
 
-const removeLocation = (index) => {
-    const newLocations = studyData.location.filter((_, i) => i !== index);
-    setStudyData({ ...studyData, location: newLocations });
-};
+    const removeLocation = (index) => {
+        const newLocations = studyData.location.filter((_, i) => i !== index);
+        setStudyData({ ...studyData, location: newLocations });
+    };
 
 
 
     return (
         <div>
             <Navbar />
-            <Typography variant="h4" component="h1" color="grey"style={{ margin: '20px' }} gutterBottom>
+            <Typography variant="h4" component="h1" color="grey" style={{ margin: '20px' }} gutterBottom>
                 Study Details
             </Typography>
 
@@ -154,18 +88,18 @@ const removeLocation = (index) => {
 
                         <Grid item xs={4}>
                             <FormLabel >What's the type of the study: </FormLabel>
-                            <Select 
+                            <Select
                                 fullWidth
                                 name="studyType"
                                 value={studyData.studyType}
                                 onChange={handleInputChange}
                                 required
                             >
-                                <MenuItem value="interview"> <CreateIcon style={{minWidth: '40px'}} />  Interview</MenuItem>
-                                <MenuItem value="focus-group"> <GroupIcon style={{minWidth: '40px'}} /> Focus Group</MenuItem>
-                                <MenuItem value="experiment"> <ScienceIcon style={{minWidth: '40px'}} /> Experiment</MenuItem>
-                                <MenuItem value="online-survey"> <AssignmentIcon style={{minWidth: '40px'}} /> Online Survey</MenuItem>
-                                <MenuItem value="questionnaire"> <ContactPageIcon style={{minWidth: '40px'}} /> Questionnaire</MenuItem>
+                                <MenuItem value="interview"> <CreateIcon style={{ minWidth: '40px' }} />  Interview</MenuItem>
+                                <MenuItem value="focus-group"> <GroupIcon style={{ minWidth: '40px' }} /> Focus Group</MenuItem>
+                                <MenuItem value="experiment"> <ScienceIcon style={{ minWidth: '40px' }} /> Experiment</MenuItem>
+                                <MenuItem value="online-survey"> <AssignmentIcon style={{ minWidth: '40px' }} /> Online Survey</MenuItem>
+                                <MenuItem value="questionnaire"> <ContactPageIcon style={{ minWidth: '40px' }} /> Questionnaire</MenuItem>
                             </Select>
                         </Grid>
 
@@ -212,17 +146,17 @@ const removeLocation = (index) => {
                             <FormLabel>Location(s) Details</FormLabel>
 
                             <Stack direction="row" spacing={1}>
-                            {studyData.location.map((loc, index) => (
-                                <Chip
-                                    key={index}
-                                    label={loc}
-                                    onDelete={() => removeLocation(index)}
-                                    color="primary"
-                                    variant="outlined"
-                                    style={{ margin: '4px' }}
-                                />
-                            ))
-                            }
+                                {studyData.location.map((loc, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={loc}
+                                        onDelete={() => removeLocation(index)}
+                                        color="primary"
+                                        variant="outlined"
+                                        style={{ margin: '4px' }}
+                                    />
+                                ))
+                                }
                             </Stack>
                             <TextField
                                 // fullWidth
@@ -232,11 +166,11 @@ const removeLocation = (index) => {
                                 onChange={(e) => setLocationInput(e.target.value)}
                                 margin="dense"
                             />
-                            
+
                         </Grid>
                         <Grid item xs={12}>
-                            <Button variant="outlined"  onClick={addLocation}>Add new location</Button>
-                        </Grid>   
+                            <Button variant="outlined" onClick={addLocation}>Add new location</Button>
+                        </Grid>
                         <Grid item xs={6}>
                             <FormLabel>Number of Participants</FormLabel>
                             <TextField

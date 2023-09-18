@@ -12,7 +12,6 @@ import { HTTP_SUCCESS,
     HTTP_NO_CONTENT,
     HTTP_LOGIN_ERROR} from "../enum.js";
 
-
 // Retrieve all sessions by studyId
 router.get('/list/:studyId', async (req, res) => {
     
@@ -21,12 +20,13 @@ router.get('/list/:studyId', async (req, res) => {
     try {
         const session = await SessionDao.retrieveSessionByStudyId(studyId);
         if (session) {
-            res.sendStatus(HTTP_SUCCESS).json(session);
+            res.status(HTTP_SUCCESS).json(session);
+            //console.log(session)
         } else {
-            res.sendStatus(HTTP_NOT_FOUND).json({message: 'Sessions not found'});
+            res.status(HTTP_NOT_FOUND).json({message: 'Sessions not found'});
         }
     } catch (error) {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
     
 });
@@ -39,12 +39,12 @@ router.get('/:sessionId', async (req, res) => {
     try {
         const session = await SessionDao.retrieveSessionById(sessionId);
         if (session) {
-            res.sendStatus(HTTP_SUCCESS).json(session);
+            res.status(HTTP_SUCCESS).json(session);
         } else {
-            res.sendStatus(HTTP_NOT_FOUND).json({message: 'Session not found'});
+            res.status(HTTP_NOT_FOUND).json({message: 'Session not found'});
         }
-    } catch {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
     
 });
@@ -61,18 +61,23 @@ router.get('/participant/list/:sessionId', async (req, res) => {
 
         for (let index = 0; index < participantList.length; index++) {
             const participantInfo = await ParticipantDao.getParticipantById(participantList[index]);
-            participantListInfo.push(participantInfo);
+            if (!participantInfo) {
+                console.warn(`Participant with ID ${studyParticipant.participantId} not found.`);
+                return null;
+            } else {
+                participantListInfo.push(participantInfo);
+            }
         }
 
         if (participantListInfo) {
-            res.sendStatus(HTTP_SUCCESS).json(participantListInfo);
+            res.status(HTTP_SUCCESS).json(participantListInfo);
         }
         else {
-            res.sendStatus(HTTP_NOT_FOUND).json({message: 'Participant list not found'});
+            res.status(HTTP_NOT_FOUND).json({message: 'Participant list not found'});
         }
 
-    } catch {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
 
 });
@@ -86,11 +91,9 @@ router.post('/:studyId', async (req, res) => {
 
     try {
         const newSession = await SessionDao.createSession(session);
-        res.status(HTTP_CREATED)
-            .header('Location', `/${newSession._id}`)
-            .json(newSession);
-    } catch {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+        res.status(HTTP_CREATED).json(newSession);
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
     
 })
@@ -98,15 +101,14 @@ router.post('/:studyId', async (req, res) => {
 // Edit a session
 router.put('/:sessionId', async (req, res) => {
     
-    const { sessionId } = req.params;
-    const session = req.body;
-    session._id = sessionId;
+    const { sessionId } = req.params
+    const updateData = req.body;
     
     try {
-        const success = await SessionDao.updateSession(session);
-        res.sendStatus(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND);
-    } catch {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+        const success = await SessionDao.updateSession(sessionId, updateData);
+        res.status(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND);
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
 
 });
@@ -118,9 +120,9 @@ router.delete('/:sessionId', async (req, res) => {
     
     try {
         const success = await SessionDao.deleteSession(sessionId);
-        res.sendStatus(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND);
-    } catch {
-        res.sendStatus(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+        res.status(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND).json(success);
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
     }
     
 });

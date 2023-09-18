@@ -66,6 +66,34 @@ export default function EditParticipant({participant, onSave }) {
                 <DialogContent>
                     <TextField 
                         fullWidth 
+                        label="First Name" 
+                        variant="outlined" 
+                        value={localParticipant.participantInfo.firstName}
+                        onChange={(e) => setLocalParticipant(prev => ({
+                            ...prev,
+                            participantInfo: {
+                                ...prev.participantInfo,
+                                firstName: e.target.value
+                            }
+                        }))}
+                        style={{marginTop: '20px'}}
+                    />
+                    <TextField 
+                        fullWidth 
+                        label="Last Name" 
+                        variant="outlined" 
+                        value={localParticipant.participantInfo.lastName}
+                        onChange={(e) => setLocalParticipant(prev => ({
+                            ...prev,
+                            participantInfo: {
+                                ...prev.participantInfo,
+                                lastName: e.target.value
+                            }
+                        }))}
+                        style={{marginTop: '20px'}}
+                    />
+                    <TextField 
+                        fullWidth 
                         label="Email" 
                         variant="outlined" 
                         value={localParticipant.participantInfo.email}
@@ -117,9 +145,7 @@ export default function EditParticipant({participant, onSave }) {
                         }
                         label="This participant is willing to receive the report."
                     />
-                    <Typography variant="h6" style={{ marginTop: '20px' }}>
-                        Tags:
-                    </Typography>
+                    <Typography variant="h6" style={{ marginTop: '20px', marginBottom: '20px' }}>Tags:</Typography>
                     <Grid container spacing={2}>
                         {localParticipant.participantInfo.tagsInfo.map((tag, index) => (
                             <Grid item key={index}>
@@ -141,18 +167,28 @@ export default function EditParticipant({participant, onSave }) {
                             />
                         </Grid>
                     </Grid>
+                    <Typography variant="h6" style={{ marginTop: '20px' }}>
+                        Status:
+                    </Typography>
                     <FormControlLabel
-                        control={<Switch 
-                            checked={localParticipant.isComplete} 
-                            onChange={() => setLocalParticipant(prev => ({
-                                ...prev,
-                                isComplete: !prev.isComplete
-                            }))} 
+                        control={
+                            <Switch 
+                                checked={localParticipant.isComplete} 
+                                onChange={() => setLocalParticipant(prev => ({
+                                    ...prev,
+                                    isComplete: !prev.isComplete
+                                }))}
                             />
                         }
-                        label="Is Completed"
-                        style={{ marginTop: '20px' }}
+                        label={
+                            localParticipant.isComplete ? 
+                            <Chip label="Completed" color="success"/> : 
+                            <Chip label="Processing" color="success" variant="outlined" />
+                        }
+                        labelPlacement="start"
+                        style={{ marginTop: '20px'}}
                     />
+                    <Typography variant="h6" style={{ marginTop: '20px' }}>Note:</Typography>
                     <TextField 
                         fullWidth 
                         label="Note" 

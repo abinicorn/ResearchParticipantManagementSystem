@@ -10,16 +10,32 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import HomeIcon from '../assets/University_of_Auckland_logo.svg'
-import { useState } from 'react';
+import {CssBaseline} from "@mui/material";
+import HomeIcon from '../assets/The University of Auckland.png';
+import {useEffect, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from "axios";
+
 
 export default function Navbar() {
+
+    const navigate = useNavigate();
     
     const pages = ['Workspace'];
     const settings = ['Profile', 'Logout'];
 
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
+
+
+    // const [userInfo, setUserInfo] = useState(
+    //     {
+    //         firstName: 'firstName',
+    //         lastName: 'lastName',
+    //         email: 'email@gmail.com'
+    //
+    //     }
+    // );
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -35,12 +51,46 @@ export default function Navbar() {
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
-    
+
+
+
+    const fetchData = async () => {
+        try {
+            const userId = '64fe98feae1ff28bdcd455b0';
+            const response = await axios.get(`http://localhost:3001/researcher/info/${userId}`);
+            const firstName = response.data.result.firstName;
+            const lastName = response.data.result.lastName;
+            const email = response.data.result.email;
+
+            const userInfo = {
+                firstName: firstName,
+                lastName: lastName,
+                email: email
+            };
+            return userInfo
+        } catch (error) {
+            console.error("Error fetching user info:", error);
+        }
+    };
+
+    const handleSettingClick = async (setting) => {
+        if (setting === 'Profile') {
+            const userInfo = await fetchData();
+            fetchData().then(r =>
+                navigate('/homepage/researcher/profile')
+            );
+        } else if (setting === 'Logout') {
+            // 执行注销操作，例如清除用户凭证、跳转到登录页等
+            window.location.href = '/';
+        }
+        handleCloseUserMenu();
+    };
+
     return (
         <AppBar position="static" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                <img src={HomeIcon} alt=""/>
+                <img src={HomeIcon} alt="" width={100}/>
                     <Typography
                         variant="h6"
                         noWrap
@@ -109,7 +159,7 @@ export default function Navbar() {
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                         <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                            <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                            <Avatar alt="Remy Sharp" src="http://localhost:3001/static/images/avatar/2.jpg" />
                         </IconButton>
                         </Tooltip>
                         <Menu
@@ -129,14 +179,14 @@ export default function Navbar() {
                         onClose={handleCloseUserMenu}
                         >
                         {settings.map((setting) => (
-                            <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                            <MenuItem key={setting} onClick={() => handleSettingClick(setting)}>
                             <Typography textAlign="center">{setting}</Typography>
                             </MenuItem>
                         ))}
                         </Menu>
                     </Box>
                 </Toolbar>
-            </Container>       
+            </Container>
         </AppBar>
     );
 }

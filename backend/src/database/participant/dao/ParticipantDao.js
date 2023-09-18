@@ -7,7 +7,7 @@ class ParticipantDao {
     }
 
     static async getAllParticipants() {
-        return await Participant.find({});
+        return await Participant.find({}, {_id: 1});
     }
 
     static async getParticipantById(participantId) {

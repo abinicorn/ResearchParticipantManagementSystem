@@ -29,6 +29,7 @@ const participantSchema = new Schema({
     timestamps: {}
 });
 
+participantSchema.index({ email: 1 });
 
 const Participant = mongoose.model('Participant', participantSchema, 'Participant');
 

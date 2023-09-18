@@ -1,12 +1,14 @@
 import  Researcher  from "../domain/ResearcherDomain.js";
 
+
+
 class ResearcherDao  {
 
-    static async  createResearch(research) {
+    static async  createResearcher(researcher) {
 
-        const dbResearch = new Researcher(research);
-        await dbResearch.save();
-        return dbResearch;
+        const dbResearcher = new Researcher(researcher);
+        await dbResearcher.save();
+        return dbResearcher;
 
     }
 
@@ -36,7 +38,7 @@ class ResearcherDao  {
     }
 
     static async getResearcherByEmail(email){
-        const researcher = await Researcher.find({email: email});
+        const researcher = await Researcher.findOne({email: email});
 
         return researcher;
     }
@@ -53,10 +55,8 @@ class ResearcherDao  {
     }
 
 
-    static async  updateResearcherByResearcherId(researcherId, updateData) {
-
-        const dbResearcher = await Researcher.findOneAndUpdate({ _id: researcherId}, { $push: { studyList: updateData } }, {new: true});
-
+    static async  updateResearcherByResearcherId(researcherId, studyId) {
+        const dbResearcher = await Researcher.findOneAndUpdate({ _id: researcherId}, { $addToSet: { studyList: studyId } }, {new: true});
         return dbResearcher != null;
     }
 
@@ -83,6 +83,29 @@ class ResearcherDao  {
 
     }
 
+    static async removeStudyfromResearcher(studyId, researcherId){
+
+        try{
+            // Find the researcher by their ID
+            const researcher = await Researcher.findById(researcherId);
+            
+            // Check if the researcher exists
+            if (!researcher) {
+                throw new Error('Researcher not found');
+            }
+
+            // Remove the studyId from the researcher's studyList
+            researcher.studyList = researcher.studyList.filter(id => id.toString() !== studyId);
+
+            // Save the updated researcher
+            await researcher.save();
+
+            return { success: true, message: 'study removed from researcher' };
+            
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    }
 }
 
 export {ResearcherDao};

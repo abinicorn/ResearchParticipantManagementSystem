@@ -1,21 +1,23 @@
 import express from 'express';
-
+import jwt from "jsonwebtoken";
 
 import {ResearcherDao} from "../database/researcher/dao/ResearcherDao.js";
 import StudyDao from "../database/study/dao/StudyDao.js";
 import Researcher from "../database/researcher/domain/ResearcherDomain.js";
 
+
 import { HTTP_SUCCESS,
     HTTP_NOT_FOUND,
     HTTP_SERVER_ERROR,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
     HTTP_NO_CONTENT,
     HTTP_LOGIN_ERROR} from "../enum.js";
 
 
 const router = express.Router();
-const secretKey = '';
+
+const secret = "secret123";
+
+const expiresIn = '12h';
 
 /**
  * @swagger
@@ -83,21 +85,37 @@ router.post('/login', async (req, res) => {
         if (!user) {
             return res.status(HTTP_LOGIN_ERROR).json({ message: 'Username or password error' });
         }
-        const { _id, studyList } = user;
+        const { _id } = user;
+
+
+
         const result = {
-            _id,
-            studyList
+            _id
         };
-        return res.status(HTTP_SUCCESS).json({ message: 'Login Success', result: result });
+        jwt.sign(
+            { _id },
+            secret,
+            { expiresIn },
+            (err, token) => {
+                // res.status(HTTP_SUCCESS).cookie("token", token).json({ message: 'Login Success'});
+                res.status(HTTP_SUCCESS).cookie("token", token, { httpOnly: true})
+                    .json({ message: 'Login Success', result: result });
+            }
+
+        )
+
+        // return res.status(HTTP_SUCCESS).cookie("token", token).json({ message: 'Login Success', result: result });
     } catch (error) {
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error' });
     }
 });
 
 
-// Todo
 // Log out
-
+router.get('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.status(HTTP_SUCCESS).json({ message: 'Logout Success' });
+});
 
 /**
  * @swagger
@@ -140,12 +158,11 @@ router.get('/info/:researcherId', async (req, res) => {
 
     const { researcherId } = req.params;
 
-
     try{
         const user = await ResearcherDao.getResearcherById(researcherId);
 
         return res.status(HTTP_SUCCESS).json({ message: 'User Info',
-            result: { firstName: user.firstName, lastName: user.lastName, email: user.email}
+            result: { firstName: user.firstName, lastName: user.lastName, email: user.email, studyList: user.studyList}
         });
     } catch (error) {
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
@@ -357,7 +374,7 @@ router.get('/list/:researcherId', async (req, res) => {
         const studlyInfoList = await StudyDao.retrieveStudyList(studyList);
 
         return res.status(HTTP_SUCCESS)
-            .json({ message: 'current researcher study list', result: studlyInfoList});
+            .json(studlyInfoList);
 
     } catch (error) {
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
@@ -415,19 +432,17 @@ router.get('/email/:email', async (req, res) => {
 
     try{
         const researcher = await ResearcherDao.getResearcherByEmail(email);
-
-        console.log(researcher[0].firstName);
-        if (researcher == undefined) {
-            return res.status(HTTP_NO_CONTENT)
-                .json({ message: 'No result'});
+        console.log(researcher);
+        if (researcher) {
+            return res.status(HTTP_SUCCESS)
+            .json(researcher);
         }
-
-        return res.status(HTTP_SUCCESS)
-            .json({ message: 'researcher', result: { firstName: researcher[0].firstName,
-                    lastName: researcher[0].lastName, email: researcher[0].email}});
-
-
+        else{
+            return res.status(HTTP_NO_CONTENT)
+            .json({ message: 'No result, you need to add new researcher to the system first'});
+        };
     } catch (error) {
+        console.log(error);
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
     }
 
@@ -500,12 +515,9 @@ router.post('/add', async (req, res) => {
 
     } catch (error) {
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
-    }
+    }s
 
 })
-
-
-
 
 
 

@@ -10,8 +10,8 @@ const sessionSchema = new Schema({
     time: {type: String, required: true},
     location: {type: String, required: true},
     participantNum: {type: Number, required: true},
-    participantList: [{type: Schema.Types.ObjectId, ref:'Participant'}]
-    
+    participantList: [{type: Schema.Types.ObjectId, ref:'Participant'}],
+    isArchive: {type: Boolean} 
 }, {
     timestamps: {}
 });

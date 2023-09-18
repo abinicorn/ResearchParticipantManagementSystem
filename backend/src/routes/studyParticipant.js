@@ -14,48 +14,62 @@ import { HTTP_SUCCESS,
 
 const router = express.Router();
 
+function transformDocument(originalDoc) {
+    return {
+        _id: originalDoc._id,
+        serialNum: originalDoc.serialNum,
+        isActive: originalDoc.isActive || false,  
+        isComplete: originalDoc.isComplete || false,
+        isGift: originalDoc.isGift || false,
+        isSentGift: originalDoc.isSentGift || false,
+        isWIllReceiveReport: originalDoc.isWIllReceiveReport || false,
+        isSentReport: originalDoc.isSentReport || false,
+        note: originalDoc.note || "",
+        participantInfo: {
+            _id: originalDoc.participantId._id,
+            firstName: originalDoc.participantId.firstName,
+            lastName: originalDoc.participantId.lastName,
+            email: originalDoc.participantId.email,
+            phoneNum: originalDoc.participantId.phoneNum,
+            isWillContact: originalDoc.participantId.isWillContact,
+            tagsInfo: originalDoc.participantId.tag.map(t => t.tagName)
+        }
+    };
+}
+
+router.get('/count/:studyId', async (req, res) => {
+    try {
+        const { studyId } = req.params;
+        const count = await StudyParticipantDao.getActiveStudyParticipantsCountByStudyId(studyId);
+        
+        res.status(HTTP_SUCCESS).json({ count });
+
+    } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+        } else {
+            res.status(HTTP_SERVER_ERROR).json({
+                error: "Failed to get the count of active study-participants.",
+                details: error.message
+            });
+        }
+    }
+});
 
 //Retrieve all related participants by studyId
 router.get('/:studyId', async (req, res) => {
     try {
         const { studyId } = req.params;
         const studyParticipants = await StudyParticipantDao.findStudyParticipantsByStudyId(studyId);
-
-        const participantsInfoPromises = studyParticipants.map(async studyParticipant => {
-            const participantInfo = await ParticipantDao.getParticipantById(studyParticipant.participantId);
-
-            if (!participantInfo) {
-                console.warn(`Participant with ID ${studyParticipant.participantId} not found.`);
-                return null;
-            }
-
-            const tagsInfoPromises = participantInfo.tag.map(async tagId => {
-                console.log(`Fetching tag for ID: ${tagId}`);  // Log here
-                try {
-                    const tag = await TagDao.getTagById(tagId);
-                    return tag.tagName;
-                } catch (error) {
-                    console.error(`Error fetching tag with ID ${tagId}:`, error);
-                    return null;
-                }
-            });
-            
-            const tagsInfo = (await Promise.all(tagsInfoPromises)).filter(tagName => tagName !== null);
-            
-            participantInfo.tagsInfo = tagsInfo;  // 将tagsInfo字段添加到participantInfo中
-            
-            studyParticipant.participantInfo = participantInfo; // This might be redundant if participantInfo is already referenced, but it's a good way to ensure.
-            
-            return studyParticipant;
-        });
-
-        const participantsWithInfo = (await Promise.all(participantsInfoPromises)).filter(p => p !== null);
-
-        if (participantsWithInfo.length > 0) {
-            res.json(participantsWithInfo);
+        
+        if (studyParticipants && studyParticipants.length > 0) {
+            // transform
+            const transformedParticipants = studyParticipants.map(transformDocument);
+            res.status(HTTP_SUCCESS).json(transformedParticipants);
         } else {
             res.sendStatus(HTTP_NO_CONTENT);
         }
+
     } catch (error) {
         if (process.env.NODE_ENV === 'production') {
             res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
@@ -76,10 +90,28 @@ router.post('/:studyId', async (req, res) => {
     if (!Array.isArray(participantIds)) {
         participantIds = [participantIds];
     }
-
+    console.log(participantIds);
     try {
-        const result = await StudyParticipantDao.createMultipleStudyParticipants(studyId, participantIds);
-        res.status(HTTP_CREATED).json(result);
+        // check if some studyparticipants are existing
+        const existingParticipants = await StudyParticipantDao.checkExistingStudyParticipants(studyId, participantIds);
+
+        // filter existing studyparticipants
+        const newParticipantIds = participantIds.filter(id => 
+            !existingParticipants.some(p => p.participantId.toString() === id)
+        );
+
+        const insertedDocs = await StudyParticipantDao.createMultipleStudyParticipants(studyId, newParticipantIds);
+
+        if (insertedDocs && insertedDocs.length > 0) {
+            // transform
+            const resultIds = insertedDocs.map(doc => doc._id);
+            const newStudyParticipants = await StudyParticipantDao.findMultipleStudyParticipantsByIds(resultIds)
+            const transformedStudyParticipants = newStudyParticipants.map(transformDocument);
+            res.status(HTTP_CREATED).json(transformedStudyParticipants);
+        } else {
+            res.status(HTTP_CREATED).json(insertedDocs);
+        }
+        
     } catch (error) {
         if (process.env.NODE_ENV === 'production') {
             res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
@@ -102,7 +134,6 @@ router.put('/:studyParticipantId', async (req, res) => {
         const success = await StudyParticipantDao.updateStudyParticipantById(studyParticipantId, updatedData);
 
         res.sendStatus(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND);
-
 
     } catch (error) {
         if (process.env.NODE_ENV === 'production') {
